@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<link rel="icon" href="data:," />
+<title>AI Agent ? 나랑 어울리는 건?</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- Safari 호환: 가변(Variable) 폰트 동적 서브셋은 iOS Safari에서 글자가 깨지거나
+     대체 폰트로 뭉개지는 사례가 있어, 정적(Static) Pretendard로 교체함 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap" />
+<style>
+  :root{
+    --bg:#fff8ec;
+    --ink:#4a3f35;
+    --ink-soft:#8a7a6b;
+    --card:#ffffff;
+    --yellow:#ffe9a8;
+    --pink:#ffd6e0;
+    --blue:#bde3f2;
+    --mint:#cdeecb;
+    --peach:#ffdfc4;
+    --lav:#e3d9ff;
+    --coral:#ffc9c0;
+    --butter:#fff0b8;
+    --sky2:#cfe8ff;
+    --lilac:#f0d9ff;
+    --teal:#c2ece5;
+  }
+  *{box-sizing:border-box;}
+  html{
+    -webkit-text-size-adjust:100%; text-size-adjust:100%;
+  }
+  body{
+    margin:0; color:var(--ink);
+    /* Safari(iOS/macOS)에서도 안정적으로 잡히는 순서: 웹폰트 → 애플 시스템 한글 폰트 */
+    font-family:Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    font-size:16px; line-height:1.65; letter-spacing:-0.01em;
+    background-color:var(--bg);
+    background-image:radial-gradient(#f3dfba 1.6px, transparent 1.7px), radial-gradient(#f9e4ec 1.6px, transparent 1.7px);
+    background-size:34px 34px, 46px 46px;
+    background-position:0 0, 17px 23px;
+    -webkit-text-size-adjust:100%; text-size-adjust:100%;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    overflow-x:clip;
+  }
+  ::selection{ background:var(--yellow); }
+  .page{ max-width:920px; margin:0 auto; padding:28px 18px 48px; }
+
+  /* ===== 히어로 카드 ===== */
+  .hero{
+    position:relative; overflow:hidden;
+    background:#fffdf7; border:3px solid #ffe1a8; border-radius:32px;
+    padding:42px 28px 36px; text-align:center;
+    box-shadow:0 10px 0 #ffe9c2, 0 18px 32px rgba(180,140,80,.12);
+  }
+  .blob{ position:absolute; border-radius:50%; opacity:.85; pointer-events:none; animation:floaty 5.5s ease-in-out infinite; }
+  .blob.b1{ width:54px; height:54px; background:var(--pink); top:18px; left:22px; }
+  .blob.b2{ width:34px; height:34px; background:var(--blue); top:30px; right:34px; animation-delay:1.2s; }
+  .blob.b3{ width:26px; height:26px; background:var(--mint); bottom:22px; left:44px; animation-delay:.6s; }
+  .blob.b4{ width:42px; height:42px; background:var(--lav); bottom:16px; right:22px; animation-delay:1.8s; }
+  .star{ position:absolute; color:#f4b942; pointer-events:none; animation:twinkle 2.6s ease-in-out infinite; }
+  .star.s1{ top:64px; left:16%; font-size:18px; }
+  .star.s2{ top:22px; right:18%; font-size:14px; animation-delay:1s; color:#f28bb4; }
+  .star.s3{ bottom:30px; right:20%; font-size:16px; animation-delay:.4s; color:#7fc8e8; }
+  @keyframes floaty{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-9px);} }
+  @keyframes twinkle{ 0%,100%{ opacity:.45; transform:scale(.9) rotate(0deg);} 50%{ opacity:1; transform:scale(1.15) rotate(12deg);} }
+  @media (prefers-reduced-motion: reduce){ .blob,.star{ animation:none; } }
+
+  .hero .pill{
+    display:inline-block; background:var(--yellow); color:#7a5a12;
+    font-size:13px; font-weight:800; padding:5px 14px; border-radius:999px; margin-bottom:16px;
+  }
+  .hero h1{
+    font-family:"Jua", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-weight:400;
+    font-size:clamp(34px, 7.2vw, 54px); line-height:1.22; margin:0 0 14px; word-break:keep-all; color:#3f342a;
+  }
+  .hero h1 .hl{ background:linear-gradient(transparent 58%, var(--pink) 58%); padding:0 4px; }
+  .hero p{ margin:0 auto; max-width:560px; font-size:16px; color:var(--ink-soft); word-break:keep-all; }
+  .hero p b{ color:var(--ink); }
+
+  /* ===== 용어 박스 (하나만) ===== */
+  .def{
+    margin-top:22px; background:#fffef9; border:2.5px dashed #eec96a; border-radius:24px;
+    padding:20px 22px; display:flex; gap:14px; align-items:flex-start; text-align:left;
+    box-shadow:0 6px 0 #fdf0cd;
+  }
+  .def .icon{
+    flex:0 0 auto; width:44px; height:44px; border-radius:50%; background:var(--yellow);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .def .icon svg{ width:24px; height:24px; }
+  .def h2{ font-family:"Jua", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-weight:400; font-size:19px; margin:1px 0 4px; }
+  .def p{ margin:0; font-size:15px; color:#6b5d4f; word-break:keep-all; }
+  .def p b{ color:var(--ink); }
+
+  /* ===== 두 갈래 안내 ===== */
+  .branch{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:20px; }
+  .branch .b{
+    border-radius:24px; padding:17px 19px 15px; background:#fff;
+  }
+  .branch .b.one{ border:2.5px solid var(--blue); box-shadow:0 6px 0 var(--blue); }
+  .branch .b.two{ border:2.5px solid var(--lav); box-shadow:0 6px 0 var(--lav); }
+  .branch .tag{
+    display:inline-block; font-family:"Jua", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-size:14.5px;
+    padding:3px 12px; border-radius:999px; margin-bottom:7px; color:#4a3f35;
+  }
+  .branch .one .tag{ background:var(--blue); }
+  .branch .two .tag{ background:var(--lav); }
+  .branch p{ margin:0; font-size:14.5px; color:#5d5044; word-break:keep-all; }
+  .branch p b{ color:var(--ink); }
+
+  /* ===== 섹션 라벨 ===== */
+  .sec-label{
+    margin:30px 4px 12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  .sec-label .num{
+    font-family:"Jua", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-size:17px; width:34px; height:34px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; flex:0 0 auto; color:#4a3f35;
+  }
+  .sec-label.c1 .num{ background:var(--blue); }
+  .sec-label.c2 .num{ background:var(--lav); }
+  .sec-label h2{ font-family:"Jua", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-weight:400; font-size:clamp(20px,4.6vw,25px); margin:0; word-break:keep-all; }
+  .sec-label .sub{ width:100%; margin:0 0 0 44px; font-size:14px; color:var(--ink-soft); word-break:keep-all; }
+
+  /* ===== 비교표 (당초 표 복원) ===== */
+  .tbl-wrap{
+    background:#fff; border:2.5px solid #ffe1a8; border-radius:26px;
+    padding:10px; box-shadow:0 8px 0 #ffe9c2;
+  }
+  .tbl-scroll, .vs-scroll{
+    max-width:100%; overflow-x:auto; overflow-y:hidden;
+    -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain;
+    touch-action:pan-x pan-y; scrollbar-width:thin;
+  }
+  .scroll-hint{
+    display:none; margin:2px 6px 8px; font-size:12.5px; font-weight:700; color:#a07c2c;
+  }
+  table.cmp{ width:100%; border-collapse:separate; border-spacing:0; font-size:13.8px; line-height:1.5; table-layout:fixed; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+  table.cmp col.c-svc{ width:18%; }
+  table.cmp col.c-type{ width:10%; }
+  table.cmp col.c-access{ width:13%; }
+  table.cmp col.c-kr{ width:10%; }
+  table.cmp col.c-cost{ width:17%; }
+  table.cmp col.c-feat{ width:32%; }
+  table.cmp th, table.cmp td{ padding:10px 9px; text-align:left; vertical-align:top; word-break:keep-all; overflow-wrap:break-word; }
+  table.cmp thead th{
+    font-size:13px; font-weight:800; color:#7a5a12; background:var(--butter);
+    border-bottom:2.5px solid #ffe1a8;
+  }
+  table.cmp thead th:first-child{ border-radius:14px 0 0 0; }
+  table.cmp thead th:last-child{ border-radius:0 14px 0 0; }
+  table.cmp tbody tr:nth-child(even) td{ background:#fffaf0; }
+  table.cmp tbody td{ border-bottom:1.5px dashed #f0e2c8; }
+  table.cmp tbody tr:last-child td{ border-bottom:none; }
+  table.cmp td.svc-name{ font-weight:800; font-size:14.5px; white-space:normal; word-break:keep-all; }
+  table.cmp td.svc-name .for{ display:block; font-weight:700; font-size:12px; color:#a07c2c; margin-top:3px; white-space:normal; }
+  .new-badge{
+    display:inline-block; font-size:10.5px; font-weight:800; background:var(--pink); color:#8a3a52;
+    border-radius:999px; padding:1px 7px; margin-left:5px; vertical-align:2px;
+  }
+  .tbl-note{ margin:10px 6px 2px; font-size:12.5px; color:var(--ink-soft); word-break:keep-all; }
+
+  /* ===== 표 밖 카드 (내 PC·서버형) ===== */
+  .mini-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .mini{
+    background:var(--card); border-radius:24px; padding:17px 19px 15px;
+    border:2.5px solid var(--c, #eee); box-shadow:0 6px 0 var(--c, #eee);
+  }
+  .mini h3{ font-size:16.5px; font-weight:800; margin:0 0 3px; word-break:keep-all; }
+  .mini .en{ font-size:12px; color:var(--ink-soft); font-weight:600; margin-bottom:7px; }
+  .mini p{ margin:0; font-size:14.5px; line-height:1.6; color:#5d5044; word-break:keep-all; }
+  .mini p b{ color:var(--ink); }
+  .mini .for{
+    display:inline-block; margin-top:9px; font-size:12.5px; font-weight:700;
+    background:#fff8ec; border:1.5px solid var(--c); color:#6e5b45;
+    padding:4px 11px; border-radius:999px;
+  }
+
+  /* Codex vs Claude Code 미니 비교표 */
+  .vs-wrap{
+    background:#fff; border:2.5px solid var(--lav); border-radius:26px;
+    padding:18px 18px 12px; box-shadow:0 8px 0 var(--lav); margin-bottom:14px;
+  }
+  .vs-wrap h3{ font-family:"Jua", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-weight:400; font-size:19px; margin:0 0 4px; word-break:keep-all; }
+  .vs-wrap .lead{ margin:0 0 12px; font-size:14.5px; color:#5d5044; word-break:keep-all; }
+  .vs-wrap .lead b{ color:var(--ink); }
+  table.vs{ width:100%; border-collapse:separate; border-spacing:0; font-size:14px; line-height:1.55; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+  table.vs th, table.vs td{ padding:9px 10px; text-align:left; vertical-align:top; word-break:keep-all; }
+  table.vs thead th{ font-size:14.5px; font-weight:800; border-bottom:2.5px solid var(--lav); }
+  table.vs thead th.cx{ color:#5b4a8a; background:#f4efff; border-radius:12px 0 0 0; }
+  table.vs thead th.cc{ color:#7a4a12; background:#fff4e0; border-radius:0 12px 0 0; }
+  table.vs tbody th{ font-size:12.5px; font-weight:800; color:var(--ink-soft); white-space:nowrap; }
+  table.vs tbody td{ border-bottom:1.5px dashed #e8ddf5; }
+  table.vs tbody tr:last-child td, table.vs tbody tr:last-child th{ border-bottom:none; }
+
+  .end{
+    margin-top:26px; text-align:center; background:var(--pink); border-radius:26px;
+    padding:20px 22px; box-shadow:0 6px 0 #f5b8ca;
+  }
+  .end p{ margin:0; font-family:"Jua", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-size:18px; line-height:1.55; color:#5c3a44; word-break:keep-all; }
+  .end p span{ font-family:Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-size:13.5px; font-weight:600; color:#8a5a68; display:block; margin-top:5px; }
+  .credit{
+    margin-top:14px; text-align:center; background:#fffef9; border:2px dashed #eec96a; border-radius:20px;
+    padding:14px 18px; box-shadow:0 5px 0 #fdf0cd;
+  }
+  .credit p{ margin:0; font-size:13.5px; line-height:1.6; color:#6b5d4f; word-break:keep-all; }
+
+  @media (max-width:760px){
+    .page{ padding:18px 14px 36px; }
+    .hero{ padding:34px 20px 30px; border-radius:26px; }
+    .blob.b1{ width:38px; height:38px; top:12px; left:12px; }
+    .blob.b2{ top:16px; right:14px; }
+    .blob.b3{ left:16px; }
+    .blob.b4{ width:30px; height:30px; right:12px; }
+    .branch{ grid-template-columns:1fr; }
+    .mini-grid{ grid-template-columns:1fr; }
+    .sec-label .sub{ margin-left:0; }
+
+    /* 표는 표 그대로 — 박스로 쌓지 않고, 래퍼 안에서 옆으로 밀어 스크롤.
+       Safari·인앱 웹뷰에서 표 구조가 풀리는 경우를 막기 위해 display를 명시적으로 고정 */
+    .tbl-wrap{ padding:8px; overflow:hidden; }
+    .scroll-hint{ display:block; }
+    .tbl-scroll, .vs-scroll{ display:block; width:100%; max-width:100%; }
+    table.cmp{
+      display:table; width:680px; min-width:680px; max-width:none;
+      table-layout:fixed; border-collapse:separate;
+    }
+    table.cmp thead{ display:table-header-group; }
+    table.cmp tbody{ display:table-row-group; }
+    table.cmp tr{ display:table-row; }
+    table.cmp th, table.cmp td{ display:table-cell; float:none; width:auto; }
+    /* 스크롤 중에도 서비스 이름은 왼쪽에 붙어 있게 */
+    table.cmp thead th:first-child,
+    table.cmp td.svc-name{
+      position:-webkit-sticky; position:sticky; left:0; z-index:2;
+    }
+    table.cmp thead th:first-child{ background:var(--butter); }
+    table.cmp td.svc-name{ background:#fff; box-shadow:6px 0 8px -6px rgba(180,140,80,.35); }
+    table.cmp tbody tr:nth-child(even) td.svc-name{ background:#fffaf0; }
+    table.vs{
+      display:table; width:560px; min-width:560px; max-width:none;
+      border-collapse:separate;
+    }
+    table.vs thead{ display:table-header-group; }
+    table.vs tbody{ display:table-row-group; }
+    table.vs tr{ display:table-row; }
+    table.vs th, table.vs td{ display:table-cell; float:none; width:auto; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <span class="blob b1" aria-hidden="true"></span>
+    <span class="blob b2" aria-hidden="true"></span>
+    <span class="blob b3" aria-hidden="true"></span>
+    <span class="blob b4" aria-hidden="true"></span>
+    <span class="star s1" aria-hidden="true">★</span>
+    <span class="star s2" aria-hidden="true">★</span>
+    <span class="star s3" aria-hidden="true">★</span>
+    <span class="pill">요즘 다들 하나씩 데리고 다닌다는</span>
+    <h1>AI Agent ?<br /><span class="hl">나랑 어울리는 건?</span></h1>
+    <p>답만 해주는 챗봇 말고, <b>맡기면 알아서 일까지 끝내오는 AI</b>들이에요.<br />성격이 다 다르니까, 나랑 맞는 애로 골라보세요.</p>
+  </header>
+
+  <div class="def">
+    <div class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#7a5a12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3"/><circle cx="12" cy="10" r="4"/><path d="M5 21c1.5-3.5 4-5 7-5s5.5 1.5 7 5"/></svg>
+    </div>
+    <div>
+      <h2>AI Agent가 뭐예요?</h2>
+      <p>질문하면 <b>답만 하는 챗봇</b>과 달리, 목표를 주면 <b>스스로 단계를 나눠 메일·캘린더·웹을 오가며 일을 끝내오는 AI</b>예요. 사람은 목표만 정하고, 결제·발송 같은 중요한 순간에만 확인하면 돼요.</p>
+    </div>
+  </div>
+
+  <div class="branch">
+    <div class="b one">
+      <span class="tag">VM 상시작동형</span>
+      <p>서비스 쪽 <b>클라우드 가상 컴퓨터(VM)가 24시간 켜져</b> 있어서, 내 컴퓨터를 꺼도 맡긴 일을 계속해요. 가입하면 바로 쓰는 비서들이 여기예요. <b>아래 비교표가 이쪽</b>입니다.</p>
+    </div>
+    <div class="b two">
+      <span class="tag">내 PC·서버 부착형</span>
+      <p><b>내 컴퓨터나 내 서버에 설치해서</b> 붙이는 방식이에요. 내 파일·환경을 직접 만지는 대신, 설치와 관리는 내 몫. 개발자용 코딩 도구들이 대표적이라 <b>표 아래에 따로</b> 정리했어요.</p>
+    </div>
+  </div>
+
+  <div class="sec-label c1">
+    <span class="num">1</span>
+    <h2>클라우드에서 계속 일하는 애들, 한눈에 비교</h2>
+    <p class="sub">전부 VM 상시작동형이에요. 맡겨두고 잊었다가 결과로 확인하는 방식입니다.</p>
+  </div>
+
+  <div class="tbl-wrap">
+    <p class="scroll-hint">표는 옆으로 밀어서 볼 수 있어요 →</p>
+    <div class="tbl-scroll" tabindex="0" aria-label="서비스 비교표, 옆으로 스크롤할 수 있습니다">
+    <table class="cmp">
+      <colgroup>
+        <col class="c-svc" /><col class="c-type" /><col class="c-access" /><col class="c-kr" /><col class="c-cost" /><col class="c-feat" />
+      </colgroup>
+      <thead>
+        <tr><th>서비스</th><th>유형</th><th>접속 방식</th><th>한국 사용</th><th>비용</th><th>핵심 특징</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="svc-name" data-label="서비스">Dots<span class="for">이런 분께 · 이미 ChatGPT 유료 쓰는 분</span></td>
+          <td data-label="유형">플랫폼 통합형</td>
+          <td data-label="접속 방식">ChatGPT 웹·앱 통합</td>
+          <td data-label="한국 사용">가능</td>
+          <td data-label="비용">Pro·Business Premium 대상 ($100 이상/월)</td>
+          <td data-label="핵심 특징">상시 작동형의 기준. 백그라운드 연속 과제 처리, 방대한 앱 연동. 조사·예약·양식 제출까지</td>
+        </tr>
+        <tr>
+          <td class="svc-name" data-label="서비스">Muse<span class="for">이런 분께 · 나만의 루틴으로 길들이고 싶은 분</span></td>
+          <td data-label="유형">상시 운용형 (직접 구성)</td>
+          <td data-label="접속 방식">muse.ai 웹, 전용 앱, WhatsApp 연동</td>
+          <td data-label="한국 사용">가능</td>
+          <td data-label="비용">무료 요금제 제공 (Power $20 / Max $100)</td>
+          <td data-label="핵심 특징">메모리와 정기 루틴을 쌓아 「내 방식대로 일하는 비서」로. 매일 점검·브리핑 같은 자동 실행에 강함</td>
+        </tr>
+        <tr>
+          <td class="svc-name" data-label="서비스">GrokBot<span class="for">이런 분께 · 일을 쪼개 맡기는 관리자형</span></td>
+          <td data-label="유형">멀티 에이전트형</td>
+          <td data-label="접속 방식">X 연동·콘솔, Cursor 연동</td>
+          <td data-label="한국 사용">iOS 가능, 안드로이드 출시 예정</td>
+          <td data-label="비용">Cursor Pro($20/월) 또는 SuperGrok 연동</td>
+          <td data-label="핵심 특징">역할이 다른 AI 팀원(Teammate)들이 큰 일을 나눠 병렬로 처리</td>
+        </tr>
+        <tr>
+          <td class="svc-name" data-label="서비스">Pickle<span class="for">이런 분께 · 앱으로 툭 맡기는 분</span></td>
+          <td data-label="유형">메신저 기반 비서형</td>
+          <td data-label="접속 방식">전용앱 (iOS만)</td>
+          <td data-label="한국 사용">가능</td>
+          <td data-label="비용">초대방식 클로즈베타(홍근 초대장 6장 남음)</td>
+          <td data-label="핵심 특징">전용 iOS 앱에서 바로 맡기는 방식. 생활용·업무용으로 역할을 나눠 여러 비서처럼 운용</td>
+        </tr>
+        <tr>
+          <td class="svc-name" data-label="서비스">Instinct<span class="for">이런 분께 · 앱 설치가 제일 싫은 분</span></td>
+          <td data-label="유형">문자메시지 비서형</td>
+          <td data-label="접속 방식">SMS·WhatsApp·iMessage (앱·웹 콘솔 없음)</td>
+          <td data-label="한국 사용">문자메시지 기반 이용</td>
+          <td data-label="비용">초대방식 클로즈베타(홍근 초대장 9장 남음)</td>
+          <td data-label="핵심 특징">사람 비서에게 문자 보내듯 짧게 맡기고 짧게 보고받는 방식</td>
+        </tr>
+        <tr>
+          <td class="svc-name" data-label="서비스">Hark Pro<span class="for">이런 분께 · 생활 잡무를 통째로 넘길 분</span></td>
+          <td data-label="유형">생활 OS형</td>
+          <td data-label="접속 방식">hark.com 웹, 전용 앱</td>
+          <td data-label="한국 사용">가능 (정식 다운로드)</td>
+          <td data-label="비용">무료 요금제 제공 (Pro $20 / Max $100)</td>
+          <td data-label="핵심 특징">「인생의 OS」 지향. 이메일 자동 분석으로 장보기·공과금·예약을 클라우드 컴퓨터로 처리</td>
+        </tr>
+        <tr>
+          <td class="svc-name" data-label="서비스">Perplexity Computer<span class="for">이런 분께 · 맡겨두고 계속 챙김 받고 싶은 분</span></td>
+          <td data-label="유형">조사·감시형 비서</td>
+          <td data-label="접속 방식">Perplexity 웹 (클라우드 실행)</td>
+          <td data-label="한국 사용">가능 (웹)</td>
+          <td data-label="비용">공식 안내에서 확인 (요금 미표기)</td>
+          <td data-label="핵심 특징">조사·자료 작업을 맡기고, 예약 작업(정기 실행)과 메일·캘린더 감시까지. 지속 메모리와 모닝 브리핑으로 「계속 챙기는 비서」에 가까운 쪽</td>
+        </tr>
+        <tr>
+          <td class="svc-name" data-label="서비스">Genspark Claw<span class="for">이런 분께 · 웹 업무·문서 작업을 대신시키고 싶은 분</span></td>
+          <td data-label="유형">AI 직원형</td>
+          <td data-label="접속 방식">웹 클라우드 컴퓨터 / 윈도우·맥 앱</td>
+          <td data-label="한국 사용">가능</td>
+          <td data-label="비용">공식 안내에서 확인 (요금 미표기)</td>
+          <td data-label="핵심 특징">「AI 직원」을 내세움. 웹에서는 클라우드 컴퓨터로, 앱으로 설치하면 내 컴퓨터를 쓰는 방식도 되는 두 얼굴</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="tbl-note">※ 요금·제공 범위는 자주 바뀌니, 가입 전에 각 서비스 공식 안내에서 한 번 더 확인해 주세요.</p>
+  </div>
+
+  <div class="sec-label c2">
+    <span class="num">2</span>
+    <h2>내 PC·서버에 붙이는 애들</h2>
+    <p class="sub">표의 비서들과 결이 달라요. 내 컴퓨터 안에서 내 파일·개발 환경을 직접 만지는 도구들이라, 표 밖에 짧게만 정리합니다.</p>
+  </div>
+
+  <div class="vs-wrap">
+    <h3>Codex vs Claude Code — 개발자용 코딩 에이전트</h3>
+    <p class="lead">둘 다 생활 비서가 아니라 <b>코드를 짜는 개발자용 도구</b>예요. 쉽게 가입해 쓰는 비서들과 달리, 터미널·개발 환경에 붙여 쓰는 「개발자용」 갈래입니다. 결은 비슷해 보여도 일하는 자리가 정반대예요.</p>
+    <p class="scroll-hint">표는 옆으로 밀어서 볼 수 있어요 →</p>
+    <div class="vs-scroll" tabindex="0" aria-label="Codex와 Claude Code 비교표, 옆으로 스크롤할 수 있습니다">
+    <table class="vs">
+      <thead>
+        <tr><th aria-label="구분"></th><th class="cx">Codex (OpenAI)</th><th class="cc">Claude Code (Anthropic)</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>주로 일하는 곳</th>
+          <td class="cx">클라우드 샌드박스에 맡겨두는 쪽 + CLI·IDE 확장·웹</td>
+          <td class="cc">내 PC의 터미널 안, 내 개발 환경 그대로</td>
+        </tr>
+        <tr>
+          <th>일하는 방식</th>
+          <td class="cx">여러 작업을 병렬로 위임하고, 결과는 코드 리뷰(PR) 형태로 확인</td>
+          <td class="cc">옆에서 단계마다 확인·승인하며 함께 진행하는 협업형</td>
+        </tr>
+        <tr>
+          <th>특징</th>
+          <td class="cx">격리된 환경에서 돌려 안전, GitHub 연동 자동 리뷰·수정에 강함. CLI는 오픈소스, 규칙 파일은 AGENTS.md</td>
+          <td class="cc">권한을 세밀하게 나눠 묻는 방식, Skills·Hooks·MCP 확장 생태계가 넓음. 규칙 파일은 CLAUDE.md</td>
+        </tr>
+        <tr>
+          <th>요금 입구</th>
+          <td class="cx">ChatGPT Plus($20/월)에 포함, 많이 쓰면 Pro $100~200</td>
+          <td class="cc">Claude Pro($20/월)에 포함, 많이 쓰면 Max $100~200</td>
+        </tr>
+        <tr>
+          <th>이런 분께</th>
+          <td class="cx">맡겨두고 결과로 확인하는 게 편한 분</td>
+          <td class="cc">과정을 함께 보며 방향을 잡고 싶은 분</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="lead" style="margin:10px 0 6px;">한 줄 요약 — <b>Codex는 「맡겨두는 위임형」, Claude Code는 「옆자리 협업형」</b>. 둘 다 표의 상시 비서와 달리, 컴퓨터를 켜고 개발 환경을 열어야 진가를 냅니다. (일반 대화용 「클로드」와는 다른 도구예요.)</p>
+  </div>
+
+  <div class="mini-grid">
+    <article class="mini" style="--c:#cdeecb">
+      <h3>OpenClaw</h3>
+      <div class="en">오픈소스 · 직접 설치해 운영</div>
+      <p><b>가입해서 바로 쓰는 서비스가 아니에요.</b> 내 PC나 서버에 직접 설치해 돌리고 메신저로 말을 거는 오픈소스라, 자유로운 대신 <b>설치·권한·모델 사용료·유지관리를 전부 직접</b> 챙겨야 해요.</p>
+      <span class="for">이런 분께 · 직접 세팅하고 관리할 수 있는 분</span>
+    </article>
+    <article class="mini" style="--c:#f6d9e8">
+      <h3>듀엣 AI</h3>
+      <div class="en">Duet AI · 현 Gemini — 구글 앱 안 도우미</div>
+      <p><b>따로 사는 비서가 아니라, 쓰던 앱 안에 붙는 짝꿍.</b> 메일·문서·시트 옆에 붙어서 초안과 정리를 바로 도와줘요. 스스로 돌아다니며 끝내오는 상시형과는 결이 달라요.</p>
+      <span class="for">이런 분께 · 구글 도구로 일하는 분</span>
+    </article>
+  </div>
+
+  <div class="end">
+    <p>처음엔 작게 맡겨 보고, 잘 맞으면 조금씩 넓혀 가세요.
+    <span>맡기는 건 AI, 마지막 확인은 나 — 그게 제일 오래 가는 조합이에요.</span></p>
+  </div>
+
+  <div class="credit">
+    <p>이 문서는 권홍근의 Muse 가 그동안의 대화를 바탕으로 만들었어요. (작성일 : 2026.10.28.)</p>
+  </div>
+
+</div>
+</body>
+</html>
